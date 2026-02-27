@@ -173,7 +173,7 @@ typedef void (cimba_thread_exit_func)(void *context);
 
 /**
  * @brief Set the user-defined thread termination function. This will be
- *        called exiting each Cimba pthread. Used e.g. to clean up
+ *        called before exiting each Cimba pthread. Used e.g. to clean up
  *        CUDA stream parameters for each pthread.
  *
  *        The exit function's argument is a context previously created by a
