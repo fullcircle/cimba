@@ -104,7 +104,7 @@ typedef const char *(cmb_timeformatter_func)(double t);
  * an argument and returning a `const char *`. See `cmb_logger.c` for one way to
  * do this.
  */
-extern void cmb_logger_set_timeformatter(cmb_timeformatter_func *tf);
+extern void cmb_logger_timeformatter_set(cmb_timeformatter_func *tf);
 
 /**
 * @brief The core logging function, like vfprintf but with logging flags in
