@@ -48,10 +48,10 @@ static void end_sim(void *subject, void *object)
  * Format time values as if they are decimal minutes,
  * print in DD HH:MM:SS.sss format
  */
-#define MYBUFLEN 20
-static char mybuf[MYBUFLEN];
+#define FMTBUFLEN 20
+static char fmtbuf[FMTBUFLEN];
 
-static const char *myformatter(const double t)
+static const char *hhhmmss_formatter(const double t)
 {
     double tmp = t;
     const unsigned days = (unsigned)(tmp / (24.0 * 60.0));
@@ -62,20 +62,20 @@ static const char *myformatter(const double t)
     tmp -= (double)minutes;
     const double seconds = tmp * 60.0;
 
-    const unsigned r = snprintf(mybuf,
-                               MYBUFLEN,
+    const unsigned r = snprintf(fmtbuf,
+                               FMTBUFLEN,
                                "%02d-%02d:%02d:%06.3f",
                                days + 1u, hours, minutes, seconds);
-    assert((r > 0) && (r < MYBUFLEN));
+    assert((r > 0) && (r < FMTBUFLEN));
 
-    return mybuf;
+    return fmtbuf;
 }
 
 int main(void)
 {
     cmb_random_initialize(cmb_random_hwseed());
     cmb_event_queue_initialize(0.0);
-    cmb_logger_set_timeformatter(myformatter);
+    cmb_logger_timeformatter_set(hhhmmss_formatter);
 
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {

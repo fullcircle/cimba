@@ -67,7 +67,7 @@ static const char *time_to_string(const double t)
 /* Pointer to current time formatting function */
 static CMB_THREAD_LOCAL const char *(*timeformatter)(double) = time_to_string;
 
-void cmb_logger_set_timeformatter(cmb_timeformatter_func *fp)
+void cmb_logger_timeformatter_set(cmb_timeformatter_func *fp)
 {
     assert(fp != NULL);
 
