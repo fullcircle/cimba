@@ -2201,7 +2201,7 @@ A LNG tanker harbor with complex resources and conditions
 Once upon a time, a harbor simulation with tugs puttering about was the author's
 first exposure to Simula67, coroutines, and object-oriented programming. The
 essential *rightness* made a lasting impression. Building a beefed-up 21st century
-version will be our final Cimba tutorial.
+version will be our next Cimba tutorial.
 
 We will use the occasion to introduce the extremely powerful :c:struct:`cmb_condition`
 that allows our processes to make arbitrarily complex ``wait`` calls. We will also show
@@ -2210,9 +2210,8 @@ linked list and the ``cmi_hashheap`` for various collections of simulation objec
 
 Since a simulation model only should be built in order to answer some specific
 question or set of questions, we will assume that our customer, the Simulated Port
-Authority (SPA),
-needs to decide whether to spend next year's investment budget on buying more
-tugs, building another berth, or dredging a deeper harbor channel. The relevant
+Authority (SPA), needs to decide whether to spend next year's investment budget on buying
+more tugs, building another berth, or dredging a deeper harbor channel. The relevant
 performance metric is to minimize the average time spent in the harbor for the
 ships. The ships come in two sizes, large and small, with different requirements
 to wind, water depth, tugs, and berths. Our model will help the SPA prioritize. The
@@ -3056,7 +3055,7 @@ berth, especially if traffic is expected to increase. However, building more tha
 one does not make much sense even at the highest traffic scenario. The SPA should
 rather consider building another one or two small berths next.
 
-This concludes our final tutorial. The code is in
+This concludes our fourth tutorial. The code is in
 `tutorial/tut_4_2.c <https://github.com/ambonvik/cimba/blob/main/tutorial/tut_4_2.c>`_.
 We have demonstrated the very powerful
 :c:struct:`cmb_condition` allowing processes to wait for arbitrary combinations of
@@ -3067,4 +3066,32 @@ possibilities.
 
 For a more in-depth discussion of how various parts of Cimba work and why they were
 built that way, consider reading :ref:`the background section <background>` next.
+
+Adding CUDA GPU power for simulation physics
+--------------------------------------------
+
+So far, our models have mostly used simple math. Important simulation tasks may
+require even more computing power than what we have used so far. For example, there might
+be complex physical and/or geometrical calculations, optimization algorithms to guide
+the actions of active agents in the simulated world, or even AI/ML capabilities. Or we
+might want to have a hybrid simulation with hardware-in-the-loop for special cases.
+
+Cimba does not include all direct support for all possible combinations of GPUs and
+other hardware, but it does provide the necessary hooks to do this. In this tutorial,
+we will illustrate this by adding GPU processing power from Nvidia CUDA devices.
+Moreover, we will distribute the workload across all available CUDA devices in the system
+by assigning each POSIX pthread to a specific CUDA stream. This creates three distinct
+levels of concurrency within our simulation: The POSIX pthreads executing trials, the
+Cimba processes (asymmetric coroutines) that are the active entities inside each trial,
+and the CUDA cores providing massively parallel physics numbercrunching within our
+simulated processes.
+
+Our simulation scenario is an Airborne Early Warning and Control System flying
+over some landscape. There are many ground targets to be detected and tracked. For each
+timestep and each timestep, we need to figure out if the target is in the beam of the
+radar, if it is hidden by terrain or earth curvature, and if the reflected signal is
+strong enough to be detected among atmospheric attenuation and ground clutter. We want
+to analyze some aspect of the AWACS operation. For the purposes of this tutorial, we
+assume that the relevant measure of outcome is target detection as a function of AWACS
+altitude. We will use a highly simplified model of terrain, sensor, and targets.
 

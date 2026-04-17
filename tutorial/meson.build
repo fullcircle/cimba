@@ -108,3 +108,13 @@ tut_4_2 = executable('tut_4_2',
                      native : true
 )
 
+tut_5_1 = executable('tut_5_1',
+                     files('tut_5_1.c'),
+                     include_directories : [inc_api, inc_int],
+                     link_with : cimba_lib,
+                     dependencies : [project_deps],
+                     link_args : ['-lhdf5'],
+                     install : false,
+                     native : true
+)
+

@@ -20,8 +20,9 @@ cc = meson.get_compiler('c')
 desired_flags = ['-Wno-pedantic',
                  '-D_POSIX_C_SOURCE=200809L',
                  '-fno-semantic-interposition',
-                 '-O3',
-                 '-DNDEBUG',
+                 '-fno-omit-frame-pointer',
+#                 '-O3',
+#                 '-DNDEBUG',
 #                 '-DNLOGINFO',
 #                 '-DNASSERT'
 ]
