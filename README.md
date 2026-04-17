@@ -5,6 +5,7 @@
 ### What is it?
 A fast discrete event simulation library written in C and assembly with POSIX pthreads.
 Simulated processes are implemented as stackful coroutines ("fibers") inside the pthreads.
+As far as we know, there is no other open source library that can provide these features.
 
 Implementation status:
 * x86-64: Stable, both for Linux and Windows
@@ -31,6 +32,10 @@ It is fast, powerful, reliable, and free.
   In the benchmark shown above, Cimba reduces the run time by 97.8 % compared to the 
   same model in SimPy using all CPU cores. This translates into doing your simulation 
   experiments in seconds instead of minutes, or in minutes instead of hours.
+
+  If you need even more speed, CUDA kernels can be used for massively parallel 
+  computation inside each simulated process, e.g. for AI-enabled agents or for 
+  intricate physics calculations.
 
 * *Powerful*: Cimba provides a comprehensive toolkit for discrete event simulation:
 
@@ -89,6 +94,14 @@ It is a general-purpose discrete event simulation library, in the spirit of a
 * urban systems like public transport and garbage collection,
 * and quite a few more application domains of similar kinds, where overall system 
   complexity arises from interactions between relatively simple components.
+
+As an example, this screen shot shows one frame from a simulation of an AWACS 
+trying to detect 1000 ground targets across a 1000 x 1000 nm synthetic map. The size of 
+each target is its current radar cross section, the color is the current detection status. 
+The vectors on the sphere representing the AWACS indicate the current direction of the 
+platform and the current direction of the radar lobe.
+
+![AWACS racetrack](images/tut_5_1.png)
 
 If you look under the hood, you will also find additional reusable internal components.
 Cimba contains stackful coroutines doing their own thing on thread-safe cactus stacks. 
