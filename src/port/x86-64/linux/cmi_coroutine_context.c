@@ -163,10 +163,9 @@ void cmi_coroutine_context_init(struct cmi_coroutine *cp)
     stkptr -= 8u;
     *(uint64_t *)stkptr = 0x0ull;
 
-    /* Set the XMM status register MXCSR, exception on invalid and div zero */
+    /* Set the XMM status register MXCSR, default value (masked fp exceptions) */
     stkptr -= 8u;
-    // *(uint64_t *)(stkptr + 4) = 0x1f80u;
-    *(uint64_t *)(stkptr + 4) = 0x1d00u;
+    *(uint64_t *)(stkptr + 4) = 0x1f80u;
     *(uint32_t *)stkptr = 0u;
 
     /* Point RBP to start of stack frame */
