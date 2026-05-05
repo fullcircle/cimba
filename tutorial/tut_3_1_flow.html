@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tut_3_1.c Process Flow - Theme Park Simulation</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        h1 { text-align: center; margin-bottom: 1rem; color: #00d4ff; }
+        h2 { color: #ff6b6b; margin: 2rem 0 1rem; border-bottom: 2px solid #333; padding-bottom: 0.5rem; }
+        h3 { color: #ffd93d; margin: 1.5rem 0 0.75rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .diagram-section {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .mermaid {
+            background: #0f3460;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th { background: #0f3460; color: #00d4ff; }
+        tr:nth-child(even) { background: #1a1a2e; }
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .legend-item {
+            background: #0f3460;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .legend-item.arrival { border-color: #4caf50; }
+        .legend-item.visitor { border-color: #2196f3; }
+        .legend-item.server { border-color: #ff9800; }
+        .legend-item.departure { border-color: #e91e63; }
+        code {
+            background: #0d1b2a;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>tut_3_1.c Process Flow</h1>
+        <p style="text-align:center; color: #888;">Theme Park M/G/n Queueing Simulation with Balking, Reneging & Jockeying</p>
+
+        <h2>Core Process Flows</h2>
+        <div class="diagram-section">
+            <h3>Arrival Process (arrival_proc)</h3>
+            <pre class="mermaid">
+flowchart LR
+    A([Start]) --> B["cmb_process_hold<br/>exponential(mean = 1/0.5)"]
+    B --> C[visitor_create]
+    C --> D["patience = cmb_random_triangular<br/>(0.5, 1.0, 1.5)"]
+    D --> E["goldcard = cmb_random_bernoulli<br/>(0.25)"]
+    E --> F["priority = goldcard ? 5 : 0"]
+    F --> G["visitor_initialize<br/>visitor_start"]
+    G --> B
+            </pre>
+        </div>
+
+        <div class="diagram-section">
+            <h3>Visitor Process (visitor_proc)</h3>
+            <pre class="mermaid">
+flowchart TD
+    A([Start]) --> B["current_attraction<br/>= IDX_ENTTRANCE"]
+    B --> C{current_attraction<br/>== IDX_EXIT?}
+    C -- No --> D["nxt = cmb_random_alias_sample<br/>quo_vadis"]
+    D --> E["Walk: cmb_process_hold<br/>PERT(0.5*mwt, mwt, 2*mwt)"]
+    E --> F["walking_time += wt<br/>current_attraction = nxt"]
+    F --> G{Not EXIT?}
+    G -- No --> C
+    G -- Yes --> H["Find shortest queue"]
+    H --> I{"shrtlen > patience<br/>* balking_threshold?"}
+    I -- Yes --> J["BALK: continue"]
+    J --> C
+    I -- No --> K["jt = patience * 5.0<br/>rt = patience * 10.0<br/>cmb_process_timer_set"]
+    K --> L["cmb_priorityqueue_put<br/>Joining queue"]
+    L --> M["cmb_process_yield<br/>Suspend self"]
+    M --> N{Signal?}
+    N -- JOCKEYING --> O["Check all queue lengths"]
+    O --> P{"shrtlen < mypos?"}
+    P -- Yes --> Q["cmb_priorityqueue_cancel<br/>Move to shorter queue"]
+    Q --> L
+    P -- No --> M
+    N -- RENEGING --> R["cmb_priorityqueue_cancel<br/>Leave park"]
+    R --> S["cmb_objectqueue_put<br/>departeds"]
+    S --> T([Exit])
+    N -- SUCCESS --> U["num_attractions_visited++"]
+    U --> G
+            </pre>
+        </div>
+
+        <div class="diagram-section">
+            <h3>Server Process (serverfunc)</h3>
+            <pre class="mermaid">
+flowchart TD
+    A([Start]) --> B["Loop forever"]
+    B --> C["cnt = 0<br/>batch[batch_size]"]
+    C --> D["cmb_priorityqueue_get<br/>Get first visitor"]
+    D --> E["cmb_process_timers_clear<br/>Clear visitor timers"]
+    E --> F["batch[cnt++] = vip"]
+    F --> G{"cmb_priorityqueue_length > 0<br/>AND cnt < batch_size?"}
+    G -- Yes --> H["Get next visitor<br/>Add to batch"]
+    H --> G
+    G -- No --> I["Log waiting times<br/>for batch"]
+    I --> J["dur = cmb_random_PERT<br/>dur_min, dur_mode, dur_max"]
+    J --> K["cmb_process_hold<br/>Ride duration"]
+    K --> L{For each<br/>visitor in batch}
+    L --> M["cmb_process_resume<br/>SUCCESS"]
+    M --> L
+    L --> B
+            </pre>
+        </div>
+
+        <div class="diagram-section">
+            <h3>Departure Process (departure_proc)</h3>
+            <pre class="mermaid">
+flowchart LR
+    A([Start]) --> B["Loop forever"]
+    B --> C["cmb_objectqueue_get<br/>Get from departeds"]
+    C --> D["tsys = cmb_time<br/>- entry_time_park"]
+    D --> E["Record stats:<br/>time_in_park<br/>riding_times<br/>waiting_times<br/>num_rides<br/>walking_times"]
+    E --> F["visitor_terminate"]
+    F --> G["visitor_destroy"]
+    G --> B
+            </pre>
+        </div>
+
+        <h2>Simulation Initialization & Teardown</h2>
+        <div class="diagram-section">
+            <h3>High-Level Flow</h3>
+            <pre class="mermaid">
+flowchart TD
+    subgraph Init["Initialization"]
+        A[main] --> B[load_params]
+        B --> C[run_trial]
+        C --> D[cmb_event_queue_initialize]
+        D --> E[cmb_random_initialize<br/>hwseed]
+        E --> F[cmb_datasummary_initialize<br/>x5]
+    end
+
+    subgraph Setup["Attraction Setup"]
+        F --> G["For ui = 0 to NUM_ATTRACTIONS<br/>attraction_initialize"]
+        G --> H["Each attraction:<br/>- Create queues<br/>- Create servers<br/>- server_start"]
+        H --> I[cmb_process_start<br/>arrivals]
+        I --> J[cmb_process_start<br/>departures]
+        J --> K[cmb_event_schedule<br/>end_sim at duration]
+    end
+
+    subgraph Exec["Execution"]
+        K --> L[cmb_event_queue_execute]
+    end
+
+    subgraph Teardown["Teardown"]
+        L --> M["Print cmb_datasummary<br/>reports"]
+        M --> N["Print queue<br/>reports"]
+        N --> O[cmb_process_stop<br/>departures]
+        O --> P[cmb_process_terminate<br/>all]
+        P --> Q[cmb_event_queue<br/>_terminate]
+    end
+
+    style Init fill:#1b5e20,color:#fff
+    style Setup fill:#e65100,color:#fff
+    style Exec fill:#0d47a1,color:#fff
+    style Teardown fill:#b71c1c,color:#fff
+            </pre>
+        </div>
+
+        <h2>Event-Driven Sequence</h2>
+        <div class="diagram-section">
+            <pre class="mermaid">
+sequenceDiagram
+    participant EventQ as Event Queue
+    participant Arrivals as Arrival Process
+    participant Visitor as Visitor Process
+    participant PQ as Priority Queue
+    participant Server as Server Process
+    participant Departures as Departure Process
+
+    EventQ->>Arrivals: Start
+    loop Every exponential interval
+        Arrivals->>Visitor: Create & Start
+        Visitor->>PQ: cmb_priorityqueue_put
+        Visitor-->>EventQ: Yield (suspend)
+        EventQ->>Server: Start
+        loop Batch processing
+            Server->>PQ: cmb_priorityqueue_get
+            Note over Server: Hold for ride duration
+        end
+        Server->>Visitor: cmb_process_resume SUCCESS
+        EventQ-->>Visitor: Yield returns
+        Visitor->>Departures: cmb_objectqueue_put
+        Departures->>Visitor: Get & destroy
+    end
+    EventQ->>Arrivals: end_sim event
+    Arrivals->>Arrivals: cmb_process_stop
+            </pre>
+        </div>
+
+        <h2>Data Structures</h2>
+        <div class="diagram-section">
+            <table>
+                <tr>
+                    <th>Structure</th>
+                    <th>Purpose</th>
+                    <th>Key Fields</th>
+                    <th>Created In</th>
+                </tr>
+                <tr>
+                    <td><code>struct visitor</code></td>
+                    <td>Per-visitor state</td>
+                    <td>patience, goldcard, entry_time_park, waiting_time, riding_time, current_attraction</td>
+                    <td><code>visitor_create</code></td>
+                </tr>
+                <tr>
+                    <td><code>struct server</code></td>
+                    <td>Per-server state</code></td>
+                    <td>pq, batch_size, dur_min/mode/max</td>
+                    <td><code>server_create</code></td>
+                </tr>
+                <tr>
+                    <td><code>struct attraction</code></td>
+                    <td>Per-attraction state</td>
+                    <td>queues[], servers[], quo_vadis (transition RNG)</td>
+                    <td><code>attraction_create</code></td>
+                </tr>
+                <tr>
+                    <td><code>struct simulation</code></td>
+                    <td>Global state</td>
+                    <td>park_attractions[10], arrivals, departures, departeds, 5 datasummaries</td>
+                    <td><code>run_trial</code></td>
+                </tr>
+                <tr>
+                    <td><code>struct context</code></td>
+                    <td>Trial context</td>
+                    <td>sim*, trl*</td>
+                    <td><code>run_trial</code></td>
+                </tr>
+            </table>
+        </div>
+
+        <h2>Customer Behaviors Summary</h2>
+        <div class="diagram-section">
+            <div class="legend">
+                <div class="legend-item arrival">
+                    <strong>Balking</strong><br/>
+                    If queue length > patience × 10,<br/>
+                    visitor skips that attraction.
+                </div>
+                <div class="legend-item visitor">
+                    <strong>Jockeying</strong><br/>
+                    After patience × 5 time units,<br/>
+                    move to shorter queue if found.
+                </div>
+                <div class="legend-item server">
+                    <strong>Reneging</strong><br/>
+                    After patience × 10 time units,<br/>
+                    cancel queue entry and leave.
+                </div>
+                <div class="legend-item departure">
+                    <strong>Priority</strong><br/>
+                    Goldcard visitors get priority 5<br/>
+                    vs regular priority 0.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            flowchart: { useMaxWidth: true, htmlLabels: true },
+            themeVariables: {
+                primaryColor: '#1976d2',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#0d47a1',
+                lineColor: '#00d4ff',
+                secondaryColor: '#0f3460',
+                tertiaryColor: '#16213e'
+            }
+        });
+    </script>
+</body>
+</html>

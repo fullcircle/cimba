@@ -59,6 +59,7 @@ extern const char *cimba_version(void);
 #include "cmb_event.h"
 #include "cmb_logger.h"
 #include "cmb_objectqueue.h"
+#include "cmb_pool.h"
 #include "cmb_process.h"
 #include "cmb_random.h"
 #include "cmb_resource.h"
