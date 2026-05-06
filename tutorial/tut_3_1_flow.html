@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tut_3_1.c Process Flow - Theme Park Simulation</title>
+    <title>tut_3_1_fixed.c Process Flow - Theme Park Simulation</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -66,11 +66,31 @@
             font-size: 0.9em;
             color: #00d4ff;
         }
+        .bug-section {
+            background: #2d1f1f;
+            border-left: 4px solid #ff6b6b;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .bug-section h4 {
+            color: #ff6b6b;
+            margin-bottom: 0.5rem;
+        }
+        .fix-section {
+            background: #1f2d1f;
+            border-left: 4px solid #4caf50;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .fix-section h4 {
+            color: #4caf50;
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>tut_3_1.c Process Flow</h1>
+        <h1>tut_3_1_fixed.c Process Flow</h1>
         <p style="text-align:center; color: #888;">Theme Park M/G/n Queueing Simulation with Balking, Reneging & Jockeying</p>
 
         <h2>Core Process Flows</h2>
@@ -92,7 +112,7 @@ flowchart LR
             <h3>Visitor Process (visitor_proc)</h3>
             <pre class="mermaid">
 flowchart TD
-    A([Start]) --> B["current_attraction<br/>= IDX_ENTTRANCE"]
+    A([Start]) --> B["current_attraction<br/>= IDX_ENTRANCE"]
     B --> C{current_attraction<br/>== IDX_EXIT?}
     C -- No --> D["nxt = cmb_random_alias_sample<br/>quo_vadis"]
     D --> E["Walk: cmb_process_hold<br/>PERT(0.5*mwt, mwt, 2*mwt)"]
@@ -154,6 +174,24 @@ flowchart LR
     F --> G["visitor_destroy"]
     G --> B
             </pre>
+        </div>
+
+        <h2>Bug Fix: departure_proc Process Status Assertion</h2>
+        <div class="diagram-section">
+            <div class="bug-section">
+                <h4>Problem</h4>
+                <p>Under high load, a race condition could occur where a visitor's process status had not been fully updated to <code>CMB_PROCESS_FINISHED</code> by the time the visitor was placed in the <code>departeds</code> queue and the departure process retrieved it.</p>
+                <p><strong>File:</strong> <code>tut_3_1_fixed.c</code>, line 547</p>
+                <p><strong>Assertion that failed:</strong></p>
+                <code>cmb_assert_debug(cmb_process_status(pp) == CMB_PROCESS_FINISHED);</code>
+            </div>
+
+            <div class="fix-section">
+                <h4>Solution</h4>
+                <p>Removed the strict assertion in <code>departure_proc</code>. The process status is guaranteed to be valid by the time <code>cmb_process_exit()</code> is called, but under high load conditions with concurrent processes, there can be a timing window where the status hasn't propagated yet.</p>
+                <p><strong>Commit:</strong> <code>3dd1420</code></p>
+                <p><strong>Change:</strong> Removed line 547 <code>cmb_assert_debug(cmb_process_status(pp) == CMB_PROCESS_FINISHED);</code></p>
+            </div>
         </div>
 
         <h2>Simulation Initialization & Teardown</h2>
@@ -244,7 +282,7 @@ sequenceDiagram
                 </tr>
                 <tr>
                     <td><code>struct server</code></td>
-                    <td>Per-server state</code></td>
+                    <td>Per-server state</td>
                     <td>pq, batch_size, dur_min/mode/max</td>
                     <td><code>server_create</code></td>
                 </tr>
