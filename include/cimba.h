@@ -57,8 +57,12 @@ extern const char *cimba_version(void);
 #include "cmb_dataset.h"
 #include "cmb_datasummary.h"
 #include "cmb_event.h"
+#include "cmb_link.h"
 #include "cmb_logger.h"
+#include "cmb_network.h"
+#include "cmb_nodeswitch.h"
 #include "cmb_objectqueue.h"
+#include "cmb_packet.h"
 #include "cmb_pool.h"
 #include "cmb_process.h"
 #include "cmb_random.h"
@@ -66,6 +70,8 @@ extern const char *cimba_version(void);
 #include "cmb_resourceguard.h"
 #include "cmb_resourcepool.h"
 #include "cmb_timeseries.h"
+#include "cmb_traffic_gen.h"
+#include "cmb_traffic_sink.h"
 #include "cmb_wtdsummary.h"
 
 /**

@@ -11,8 +11,12 @@ install_headers(
     'cmb_dataset.h',
     'cmb_datasummary.h',
     'cmb_event.h',
+    'cmb_link.h',
     'cmb_logger.h',
+    'cmb_network.h',
+    'cmb_nodeswitch.h',
     'cmb_objectqueue.h',
+    'cmb_packet.h',
     'cmb_pool.h',
     'cmb_priorityqueue.h',
     'cmb_process.h',
@@ -21,5 +25,7 @@ install_headers(
     'cmb_resourceguard.h',
     'cmb_resourcepool.h',
     'cmb_timeseries.h',
+    'cmb_traffic_gen.h',
+    'cmb_traffic_sink.h',
     'cmb_wtdsummary.h'
 )
