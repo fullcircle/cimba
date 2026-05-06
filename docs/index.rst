@@ -12,3 +12,4 @@ Cimba documentation
     tutorial
     background
     api/library_root
+    cmb_pool

@@ -37,6 +37,7 @@ if doxygen.found() and sphinx.found()
                  'tutorial.rst',
                  'background.rst',
                  'static/custom.css',
+                 'cmb_pool.rst',
                  conf_py],
         output : 'html',
         command : [sphinx, '-b', 'html',
