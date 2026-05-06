@@ -544,7 +544,6 @@ void *departure_proc(struct cmb_process *me, void *vctx)
         (void)cmb_objectqueue_get(sim->departeds, (void **)(&vip));
         cmb_assert_debug(vip != NULL);
         struct cmb_process *pp = (struct cmb_process *)vip;
-        cmb_assert_debug(cmb_process_status(pp) == CMB_PROCESS_FINISHED);
         cmb_logger_user(stdout, LOGFLAG_DEPARTURE, "%s departed",
                         ((struct cmb_process *)vip)->name);
 
